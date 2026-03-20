@@ -1,0 +1,20 @@
+#Include "tlpp-core.th"
+
+/*/{Protheus.doc} FT210BRW
+Este ponto de entrada é executado antes da abertura do browser da rotina de Liberação por Regras,
+e é utilizado para filtrar os pedidos bloqueados por regra ou verba.
+@author  Anderson Koziel - Vamilly
+@type Function
+@since   16/12/24
+@version 1.0
+@obs https://tdn.totvs.com/display/public/PROT/FT210BRW+-+Filtro+de+itens
+/*/
+
+User Function FT210BRW()
+    //Filtro no browser.
+    Local cFiltro := "Empty(C5_NOTA) .And. (C5_BLQ == '1' .Or. C5_BLQ == '2') .And. C5_XORCAME <> '1'"
+
+    DbSelectArea("SC5")
+    SET FILTER TO &(cFiltro)
+    SC5->(DBGoTop())
+Return

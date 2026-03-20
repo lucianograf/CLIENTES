@@ -1,0 +1,347 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Workflow por Link</title>
+</head>
+
+<body>
+
+<form action="mailto:%WFMailTo%" method="POST" name="formulario">
+	<table border="0" width="100%" cellspacing="0" cellpadding="0">
+		<tr>
+			<td width="98%">
+			<p style="MARGIN: 0px; WORD-SPACING: 0px; TEXT-INDENT: 0px; LINE-HEIGHT: 100%">
+			!nomecom!.</p>
+			<p style="MARGIN: 0px; WORD-SPACING: 0px; TEXT-INDENT: 0px; LINE-HEIGHT: 100%">
+			!endemp!</p>
+			<p style="MARGIN: 0px; WORD-SPACING: 0px; TEXT-INDENT: 0px; LINE-HEIGHT: 100%">
+			!comemp!</p>
+			<p style="MARGIN: 0px; WORD-SPACING: 0px; TEXT-INDENT: 0px; LINE-HEIGHT: 100%">
+			!fone!</p>
+			<p style="MARGIN: 0px; WORD-SPACING: 0px; TEXT-INDENT: 0px; LINE-HEIGHT: 100%">
+			<u>E</u>-mail: !emailuser!</p>
+			<p style="MARGIN: 0px; WORD-SPACING: 0px; TEXT-INDENT: 0px; LINE-HEIGHT: 100%">
+			Usuário: !usuario!</p>
+			</td>
+		</tr>
+	</table>
+	<p></p>
+	<p style="MARGIN: 0px; WORD-SPACING: 0px; TEXT-INDENT: 0px; LINE-HEIGHT: 100%">&nbsp;</p>
+	<table width="100%" bordercolor="#DFDFDF" bordercolorlight="#DFDFDF" bordercolordark="#DFEFFF" border="3">
+		<tr>
+			<td width="99%" bgcolor="#FFFF99" align="center" colspan="4">
+			<p align="center"><b><u><font face="Arial">Aprovação de Orçamento 
+			Televendas 
+			-&nbsp; %C5_NUM% </font></u></b></p>
+			</td>
+		</tr>
+		<tr>
+			<td width="9%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Número:</font></td>
+			<td width="34%" align="left">
+			<font face="Arial" size="2">%C5_NUM%</font></td>
+			<td width="13%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Cliente:</font></td>
+			<td width="42%" align="left">
+			<font face="Arial" size="2">%C5_CLIENTE% / %C5_LOJACLI% - %A1_NOME%</font></td>
+		</tr>
+		<tr>
+			<td width="9%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Emissão:</font></td>
+			<td width="34%" align="left">
+			<font face="Arial" size="2">%C5_EMISSAO%</font></td>
+			<td width="13%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Endereço:</font></td>
+			<td width="42%" align="left">
+			<font face="Arial" size="2">%A1_END% - %A1_COMPLEM%</font></td>
+		</tr>
+		<tr>
+			<td width="9%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Transportadora:</font></td>
+			<td width="34%" align="left">
+			<font face="Arial" size="2">%C5_TRANSP%-%A4_NREDUZ%</font></td>
+			<td width="13%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Bairro:</font></td>
+			<td width="42%" align="left">
+			<font face="Arial" size="2">%A1_BAIRRO%</font></td>
+		</tr>
+		<tr>
+			<td width="9%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Programado:</font></td>
+			<td width="34%" align="left">
+			<font face="Arial" size="2">%C5_DTPROGM%</font></td>
+			<td width="13%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Cidade/Estado:</font></td>
+			<td width="42%" align="left">
+			<font face="Arial" size="2">%A1_MUN% - %A1_EST%</font></td>
+		</tr>
+		<tr>
+			<td width="9%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Próximo Faturamento:</font></td>
+			<td width="34%" align="left">
+			<font face="Arial" size="2">%NEXTFAT%</font></td>
+			<td width="13%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Vendedor:</font></td>
+			<td width="42%" align="left">
+			<font face="Arial" size="2">%C5_VEND1%</font></td>
+		</tr>
+		<tr>
+			<td width="9%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Prazo Entrega:</font></td>
+			<td width="34%" align="left">
+			<font face="Arial" size="2">%PAB_PRAZO%</font></td>
+			<td width="13%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Vendedor 2:</font></td>
+			<td width="42%" align="left">
+			<font face="Arial" size="2">%C5_VEND2%</font></td>
+		</tr>
+		<tr>
+			<td width="9%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Condição Pagamento:</font></td>
+			<td width="34%" align="left">
+			<font face="Arial" size="2">%C5_CONDPAG%</font></td>
+			<td width="13%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Bloqueio Comercial:</font></td>
+			<td width="42%" align="left">
+			<font face="Arial" size="2">%A1_GERAT%</font></td>
+		</tr>
+		<tr>
+			<td width="9%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Digitado/Alterado:</font></td>
+			<td width="34%" align="left">
+			<font face="Arial" size="2">%C5_USUPED%</font></td>
+			<td width="13%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Tabela Padrão:</font></td>
+			<td width="42%" align="left">
+			<font face="Arial" size="2">%A1_TABELA%</font></td>
+		</tr>
+		<tr>
+			<td width="9%" bgcolor="#FFFF99" align="right" height="22">
+			<font face="Arial" size="2">Mensagem Interna:</font></td>
+			<td width="89%" align="center" colspan="3" height="22">
+			<p align="left"><font face="Arial" size="2">%C5_MSGINT%</font></p>
+			</td>
+		</tr>
+		<tr>
+			<td width="9%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Mensagem Nota:</font></td>
+			<td width="89%" align="center" colspan="3">
+			<p align="left"><font face="Arial" size="2">%C5_MENNOTA%</font></p>
+			</td>
+		</tr>
+	</table>
+	<table width="100%" bordercolor="#DFEFFF" bordercolorlight="#DFDFDF" bordercolordark="#dfefff" bgcolor="#ffffff" border="3">
+		<tr>
+			<td width="50" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">Item </font></td>
+			<td width="135" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">Cód.Produto</font></td>
+			<td width="451" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">Descrição</font></td>
+			<td width="34" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">Status</font></td>
+			<!-- IAGO 26/10/2016 Chamado(16138) -->
+			<td width="65" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">Ult.Comp</font></td>
+			<td width="49" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">Ult.Qtd</font></td>
+			<td width="49" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">Estoque</font></td>
+			<td width="65" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">Quantidade</font></td>
+			<td width="65" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">Ult.Prc</font></td>
+			<!-- FIM IAGO 26/10/2016 Chamado(16138) -->
+			<td width="52" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">Prc.Tabela</font></td>
+			<td width="55" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">Prc.Venda</font></td>
+			<td width="60" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">% Desconto</font></td>
+			<td width="60" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">Total</font></td>
+			<td width="60" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">R$ Margem</font></td>
+			<td width="42" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">% Margem</font></td>
+			<td width="42" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">R$ IR</font></td>
+			<td width="42" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">% IR</font></td>
+			<td width="42" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">R$ Tampa</font></td>
+			<td width="42" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">R$ MKT</font></td>
+			<td width="42" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">R$ F&amp;I</font></td>
+			<td width="42" height="23" align="center" bgcolor="#FFFF99">
+			<font face="Arial" size="1">Peso Kg</font></td>
+		</tr>
+		<tr>
+			<td width="50" height="18" align="center">
+			<font face="Arial" size="1">%it.item% </font></td>
+			<td width="135" height="18" align="center">
+			<font face="Arial" size="1">%it.cod%</font></td>
+			<td width="451" height="18" align="center">
+			<font face="Arial" size="1">%it.desc%</font></td>
+			<td width="34" height="18" align="center">
+			<font face="Arial" size="1">%it.sts%</font></td>
+			<!-- IAGO 26/10/2016 Chamado(16138) -->
+			<td width="34" height="18" align="center">
+			<font face="Arial" size="1">%it.udat%</font></td>
+			<td width="34" height="18" align="center">
+			<font face="Arial" size="1">%it.uqtd%</font></td>
+			<td width="49" height="18" align="center">
+			<font face="Arial" size="1">%it.saldo%</font></td>
+			<td width="65" height="18" align="center">
+			<font face="Arial" size="1">%it.qte%</font></td>
+			<td width="34" height="18" align="center">
+			<font face="Arial" size="1">%it.uprc%</font></td>
+			<!-- FIM IAGO 26/10/2016 Chamado(16138) -->
+			<td width="52" height="18" align="center">
+			<font face="Arial" size="1">%it.prctab%</font></td>
+			<td width="55" height="18" align="center">
+			<font face="Arial" size="1">%it.prcven%</font></td>
+			<td width="60" height="18" align="center">
+			<font face="Arial" size="1">%it.desconto%</font></td>
+			<td width="60" height="18" align="center">
+			<font face="Arial" size="1">%it.total%</font></td>
+			<td width="60" height="18" align="center">
+			<font face="Arial" size="1">%it.vlrmg%</font></td>
+			<td width="42" height="18" align="center">
+			<font face="Arial" size="1">%it.pmg%</font></td>
+			<td width="42" height="18" align="center">
+			<font face="Arial" size="1">%it.vlrir%</font></td>
+			<td width="42" height="18" align="center">
+			<font face="Arial" size="1">%it.pir%</font></td>
+			<td width="42" height="18" align="center">
+			<font face="Arial" size="1">%it.tampa%</font></td>
+			<td width="42" height="18" align="center">
+			<font face="Arial" size="1">%it.mkt%</font></td>
+			<td width="42" height="18" align="center">
+			<font face="Arial" size="1">%it.fandi%</font></td>
+			<td width="42" height="18" align="center">
+			<font face="Arial" size="1">%it.peso%</font></td>
+		</tr>
+	</table>
+	<table width="100%" bordercolor="#dfefff" bordercolorlight="#DFDFDF" bordercolordark="#dfefff" border="3">
+		<tr>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">R$ Bruto:</font></td>
+			<td width="17%" align="left">
+			<font face="Arial" size="2">%TOTBRUTO%</font></td>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">% Desconto</font></td>
+			<td width="17%" align="left">
+			<font face="Arial" size="2">%TOTDESC%</font></td>
+			</tr>
+		<tr>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">R$ Total:</font></td>
+			<td width="17%" align="left">
+			<font face="Arial" size="2">%TOTVALOR%</font></td>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">R$ Margem c/Frete:</font></td>
+			<td width="16%" align="left">
+			<font face="Arial" size="2">%TOTVMARGEM%</font></td>
+			</tr>
+		<tr>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">R$ Tampas:</font></td>
+			<td width="17%" align="left">
+			<font face="Arial" size="2">%TOTTAMPAS%</font></td>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">% Margem c/Frete:</font></td>
+			<td width="16%" align="left">
+			<font face="Arial" size="2">%TOTPMARGEM%</font></td>
+			</tr>
+		<tr>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">R$ Impostos (PIS/COFINS/ICMS):</font></td>
+			<td width="17%" align="left">
+			<font face="Arial" size="2">%TOTIMPOSTOS%</font></td>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">R$ IR:</font></td>
+			<td width="16%" align="left">
+			<font face="Arial" size="2">%TOTVIR%</font></td>
+			</tr>
+		<tr>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">R$ Verbas (F&amp;I+MKT):</font></td>
+			<td width="17%" align="left">
+			<font face="Arial" size="2">%TOTMKT%</font></td>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">% IR:</font></td>
+			<td width="16%" align="left">
+			<font face="Arial" size="2">%TOTPIR%</font></td>
+			</tr>
+		<tr>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">R$ Frete Real:</font></td>
+			<td width="17%" align="left">
+			<font face="Arial" size="2">%TOTFRETE%</font></td>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">% Frete:</font></td>
+			<td width="16%" align="left">
+			<font face="Arial" size="2">%TOTPFRETE%</font></td>
+			</tr>
+		<tr>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2">Peso Kg:</font></td>
+			<td width="17%" align="left">
+			<font face="Arial" size="2">%TOTPESO%</font></td>
+			<td width="17%" bgcolor="#FFFF99" align="right">
+			<font face="Arial" size="2"><b>% Rentabilidade</b>:</font></td>
+			<td width="16%" align="left">
+			<b>
+			<font face="Arial" size="2">%TOTRENTAB%</font></b></td>
+			</tr>
+		<tr>
+			<td width="67%" colspan="4">
+			<table width="100%" border="0">
+				<tr>
+					<td width="15%"><font face="Arial"><strong>
+					<b><i><blink>APROVAÇÃO:</blink></i></b></strong></font></td>
+					<td width="56%"><font face="Arial">
+					<input name="Aprovacao" type="radio" checked value="%Aprovacao%D" />Solicitar 
+					Aprovação da Diretoria</font></td>
+				</tr>
+				<tr>
+					<td width="15%">&nbsp;</td>
+					<td width="56%"><font face="Arial">
+					<input name="Aprovacao" type="radio" value="%Aprovacao%N" />Rejeitar 
+					Orçamento. 
+					(Favor especificar motivo)</font></td>
+				</tr>
+				<tr>
+					<td width="15%"><font face="Arial" size="2">Observação:<b> !observ!</b></font></td>
+					<td width="56%"><font size="2">
+					<textarea name="S1" rows="4" cols="67">%C5_MSGEXP%
+               </textarea> </font></td>
+				</tr>
+				<tr>
+					<td width="15%">&nbsp;</td>
+					<td width="56%"><font face="Arial">
+					<input name="B1" type="submit" value="Enviar" />
+					<input name="B2" type="reset" value="Limpar" /> </font></td>
+				</tr>
+			</table>
+			<p style="text-indent: 0; line-height: 100%; word-spacing: 0; margin: 0">
+			<b>
+			<i><font face="Arial" size="2">Mensagem enviada via Workflow - !data!&nbsp; - !hora!<br />
+			Depto de Vendas </font></i></b></p>
+			<p style="text-indent: 0; line-height: 100%; word-spacing: 0; margin: 0">
+			<b>
+			<i><font face="Arial" size="2">Rdmake !rdmake!</font></i></b></p>
+			<p style="text-indent: 0; line-height: 100%; word-spacing: 0; margin: 0">
+			<b>
+			<i><font face="Arial" size="2">Destinatários !destinatarios!</font></i></b></p>
+			</td>
+		</tr>
+	</table>
+</form>
+
+</body>
+
+</html>

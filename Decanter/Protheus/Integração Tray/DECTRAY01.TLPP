@@ -1,0 +1,28 @@
+#Include 'Protheus.ch'
+
+/*/{Protheus.doc} DECTRAY01()
+    Essa função retorna o endereço completo do cliente da plataforma tray.
+    @type  Function
+    @author Anderson Koziel - Vamilly
+    @since 15/12/2023
+    @version 1.0
+    @return character, retorna o endereço completo.
+/*/
+User Function DECTRAY01()
+    Local cEndereco    := ""                                                                          as character
+    Local cLogradouro  := Alltrim(FwNoAccent(DECODEUTF8((oJsonAux["Order"]["Customer"]["address"])))) as character
+    Local nNumeroCasa  := AllTrim(oJsonAux["Order"]["Customer"]["number"])                            as numeric
+    Local cComplemento := AllTrim(oJsonAux["Order"]["Customer"]["complement"])                        as character
+
+    // Verificia se o numero da casa esta contido no endereço e se tiver retorna apenas o endereço.
+    If  cValToChar(nNumeroCasa) $ cLogradouro
+        cEndereco := cLogradouro
+    Else 
+        // Caso o numero não estiver no endereço, verifica se o tamanho do retorno é do tamanho do campo.
+        If Len((cLogradouro + ", " + cValToChar(nNumeroCasa) + ", " + cComplemento)) > TamSx3("A1_END")[1]
+            cEndereco := (cLogradouro + ", " + cValToChar(nNumeroCasa))
+        Else
+            cEndereco := (cLogradouro + ", " + cValToChar(nNumeroCasa) + ", " + cComplemento)
+        EndIf
+    EndIf
+Return Upper(cEndereco)

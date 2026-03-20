@@ -1,0 +1,88 @@
+#Include "Protheus.ch"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+
+User Function LEXM460FIM()
+	Local oFunGenericas 
+	Local cCampoPed 	
+    Local cAliasZLX := SuperGetMV("ZZ_LEXPAR", .F., 'ZLX')
+    Local cFiliais := ''
+    
+    (cAliasZLX)->(Dbgotop())
+    While (cAliasZLX)->(!Eof()) .AND. Empty(cFiliais)
+    
+        If ALLTRIM((cAliasZLX)->&(cAliasZLX+'_PAR')) == 'FILIAIS'
+            cFiliais := (cAliasZLX)->&(cAliasZLX+'_VALOR') 
+        EndIf
+    
+        (cAliasZLX)->(DbSkip())
+    EndDo
+    
+    If cFilAnt $ cFiliais
+		oFunGenericas := LexosFnGenericas():New()
+		cCampoPed 	:= oFunGenericas:GetParamsLexos("CAMPO_INT_PEDIDO_VENDA")
+		If !Empty(cCampoPed)
+			DbSelectArea("SD2")
+			SD2->(DbSetorder(3))
+			If SD2->(DbSeek(SF2->(F2_FILIAL+F2_DOC+F2_SERIE+F2_CLIENTE+F2_LOJA)))
+				cPedido := SD2->D2_PEDIDO
+
+				DBSelectArea("SC5")
+				SC5->(DBSetorder(1))
+				// se posiciona pega o tipo de pagamento
+				If SC5->(DbSeek(XFilial("SC5") + cPedido))
+					If !Empty(SC5->&(cCampoPed))
+						// Grava log de Notas Fiscais
+						oFunGenericas:GravaLogNotaFiscal()
+					EndIf
+				EndIf
+			EndIf
+		EndIF
+	EndIf
+	
+
+Return 
+/*
+User Function MDSCORR()
+	
+	Local cCampoPed 	
+    Local cAliasZLX := SuperGetMV("ZZ_LEXPAR", .F., 'ZLX')
+	Local jPedido 	 		:= JsonObject():New()
+	Local cFiliaisParam := oFunGenericas:GetParamsLexos("FILIAIS")
+	Local aFiliais  := StrTokArr(cFiliaisParam,";")	
+	Local nX
+	Private  oFunGenericas := LexosFnGenericas():New()
+	Private oLexos        := Lexos():New()
+	
+	cFilbkp := cFilAnt
+	For nX := 1 to Len(aFiliais)
+		cFilAnt := aFiliais[nX]
+		SF2->(DbGoTop())
+		SF2->(DbSetOrder(16))
+		SF2->(DbSeek(XFilial('SF2') + '20240418'))
+		While SF2->(F2_FILIAL+DTOS(F2_EMISSAO)) == XFilial('SF2')+'20240418'
+
+			U_LEXM460FIM()
+			
+			SF2->(DbSkip())
+		Enddo
+	Next nX
+	cFilAnt := cFilbkp 
+/*
+	cFilbkp := cFilAnt
+	For nX := 1 to Len(aFiliais)
+		cFilAnt := aFiliais[nX]
+		SC5->(DbGoTop())
+		SC5->(DbSetOrder(02))
+		SC5->(DbSeek(XFilial('SC5') + '20240228'))
+		While SC5->(C5_FILIAL+DTOS(C5_EMISSAO)) == XFilial('SC5')+'20240228'
+
+			If !Empty(SC5->C5_ZLXINT)	
+				// Grava log de Notas Fiscais
+				oFunGenericas:GravaLogNotaFiscal()
+			EndIf
+			SC5->(DbSkip())
+		Enddo
+	Next nX
+	cFilAnt := cFilbkp  
+Return*/

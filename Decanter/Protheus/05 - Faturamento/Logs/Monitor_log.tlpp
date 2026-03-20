@@ -1,0 +1,136 @@
+#Include "Tlpp-core.th"
+#Include "Protheus.ch"
+
+namespace Monitor_log
+
+/*/{Protheus.doc} Record_Log
+    Grava Log, feito inicialmente para gravar log dos pedidos de vendas.
+    @type  Function
+    @author Anderson Koziel - Vamilly
+    @since 12/12/2024
+    @version 1.0
+    @param cNumero, Character, numero do pedido de vendas.
+    @param cRotina, Character, rotina que gerou o log.
+    @param cMensagem, Character, mensagem do log.
+    @param lCheck_deleted, Logical, verifica se o pedido esta deletado.
+    @Obs: Chamada: Monitor_log.U_Record_Log(SC5->C5_NUM, ProcName() , "" , .T.)
+/*/
+User Function Record_Log(cNumero as Character, cRotina as Character, cMensagem as Character, lCheck_deleted as Logical)
+    Local lActive     := SuperGetMv("DC_ATIVALG" , , .F.)  as logical
+    Local cEmpresas   := SuperGetMv("DC_EMPRLOG" , , "01") as character
+
+    Default cNumero        := SC5->C5_NUM
+    Default cRotina        := ""
+    Default cMensagem      := ""
+    Default lCheck_deleted := .T.
+
+    //Verifica se a customização está ativa e se utiliza na empresa.
+    If lActive .And. cEmpAnt $ AllTrim(Upper(cEmpresas))
+        Begin Sequence
+            DBSelectArea("ZLG")
+            If RecLock('ZLG',.T.)
+                ZLG->ZLG_FILIAL := FwxFilial("ZLG")
+                ZLG->ZLG_NUMERO := cNumero
+                ZLG->ZLG_DATALO := Date()
+                ZLG->ZLG_HRLOG  := Time()
+                ZLG->ZLG_USER   := RetCodUsr()
+                ZLG->ZLG_ROTINA := Upper(AllTrim(cRotina))
+                ZLG->ZLG_MSG    := AllTrim(cMensagem) + CRLF + Log_informations( lCheck_deleted, cNumero )
+                ZLG->(MsUnlock())
+            EndIf
+        End Sequence
+    EndIf
+Return
+
+/*/{Protheus.doc} Log_informations
+    Informações adicionais do log.
+    @type  Function
+    @author Anderson Koziel - Vamilly
+    @since 12/12/2024
+    @version 1.0
+    @param lCheck_deleted, logical, verifica se o pedido está com a SC5 deletada e SC6 normal.
+    @return Character, informações do log
+/*/
+Static Function Log_informations( lCheck_deleted as Logical, cNumero as Character ) as Character
+    Local cLog := "" as Character
+    //Verifica se o pedido está deletado.
+    If lCheck_deleted 
+        If Deleted_orders(cNumero) 
+            cLog += "Pedido com itens deletados" + CRLF
+        Else
+            cLog += "Pedido normal" + CRLF
+        EndIf
+    EndIf
+
+    // Salva a pilha de chamadas.
+    cLog += + CRLF +  "Pilha de chamadas: " + CRLF + Record_stack_functions()
+Return cLog
+
+/*/{Protheus.doc} Record_stack_functions
+    Grava o stack de funções do log.
+    @type  Function
+    @author Anderson Koziel - Vamilly
+    @since 12/12/2024
+    @version 1.0
+    @param lCheck_deleted, logical, verifica se o pedido está com a SC5 deletada e SC6 normal.
+    @return Character, informações do log
+/*/
+Static Function Record_stack_functions() as Character
+    Local n               := 1  as Numeric
+    Local cStackFunctions := "" as Character
+
+    Do While !Empty( ProcName( n ) )
+        cStackFunctions += ( AllTrim( ProcName( n++ ) ) ) + CRLF
+    EndDo
+Return( cStackFunctions )
+
+/*/{Protheus.doc} Deleted_orders
+    Verifica se os itens do pedido estao deletados. Se a SC5 está deletada e a SC6 não.
+    @type Function
+    @author Anderson Koziel - Vamilly
+    @since 12/12/2024
+    @version 1.0
+    @param cNumero, Character, numero do pedido.
+/*/
+Static Function Deleted_orders(cNumero as Character) as Logical
+    Local cAlias   := GetNextAlias() as Character
+    Local lDeleted := .F.            as Logical
+    
+    Default cNumero := ""
+
+    BeginSql Alias cAlias
+        %noparser%
+        SELECT
+            C5_NUM
+        FROM
+            %Table:SC6% SC6 WITH (NOLOCK)
+        INNER JOIN %Table:SC5%  SC5 WITH (NOLOCK)
+        ON C5_FILIAL = C6_FILIAL
+            AND C5_NUM = C6_NUM
+            AND C5_CLIENTE = C6_CLI
+            AND C5_NUM = %Exp:cNumero%
+            AND SC5.D_E_L_E_T_ = '*' 
+        WHERE
+            SC6.D_E_L_E_T_ = '' 
+            AND C6_NUM IN (
+                SELECT
+                    C6_NUM
+                FROM
+                    %Table:SC6% SC6 WITH (NOLOCK)
+                GROUP BY
+                    C6_NUM
+                HAVING
+                    COUNT(*) >= 1
+            )
+    EndSql
+
+    //Verifica se retornou resultado, indica que está deletado.
+    If (cAlias)->(!Eof())
+        lDeleted := .T.
+    EndIf
+
+    //Verifica se a tabela está aberta.
+    If Select( cAlias ) > 0
+		(cAlias)->( dbCloseArea() )            
+	Endif 
+Return lDeleted

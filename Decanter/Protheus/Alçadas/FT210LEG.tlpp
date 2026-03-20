@@ -1,0 +1,23 @@
+#Include "tlpp-core.th"
+#Include "FATA210.ch"
+
+/*/{Protheus.doc} FT210OPC
+O ponto de entrada FT210LEG possibilita configurar as informações da legenda conforme a necessidade.
+@author  Anderson Koziel - Vamilly
+@type Function
+@since   03/10/24
+@version 1.0
+@return  array, cores da legenda.
+@obs https://tdn.totvs.com/pages/releaseview.action?pageId=6784497
+/*/
+User Function FT210LEG()
+    Local aCores := ParamIXB as array
+    Local lAprHie := SuperGetMv("DC_APRHIE" ,.F.) As Logical  // Habilita aprovação por Hierarquia.
+    
+    If lAprHie
+        aCores := {{ "BR_AZUL" 	, STR0007 },;
+                   { "BR_LARANJA"	, STR0008  },; 
+                   { "BMPPOST"	, "Pedido Bloqueado por Hierarquia"  } }
+    EndIf
+Return aCores
+

@@ -1,0 +1,261 @@
++--------------------------------------------------------------------+
+| Migra��o de Fontes e Arquivos do Projeto Atria/Onix para BRLub     |
++--------------------------------------------------------------------+
+
+Empresa - 14 
+
++-----------------------+
+|Filiais criadas       OK !   
++-----------------------+
+Filiais - 01  - 44.221.571/0001-21 Brasil Distribuidora de Lubrificantes Ltda RS
+        - 02  - 44.221.571/0002-02 Brasil Distribuidora de Lubrificantes Ltda MG
+        - 03  - 44.221.571/0003-93 Brasil Distribuidora de Lubrificantes Ltda PR
+        - 04  - 44.221.571/0004-74 Brasil Distribuidora de Lubrificantes Ltda SC
+
+-> Certificados digitais - 15/03/2022 - 15:24hs 
+
++-----------------------+
+|Tabelas criadas      OK  !   
++-----------------------+
+PAB/SZ0 /SZ1/SZ3/SZ8/SZ9/SZA/SZB/SZC/SZK/SZM/SZP/SZS/SZU/ZD6
+
++-------------------------------------+
+|Campos customizados da  tabelas    OK  !   
++-------------------------------------+
+SD2/SA1/SB1/SD1/SC5/SC6/SUA/SUB/SF2/SA2/SC9/SE1/SE2
+
++-----------------------+
+|Parametros criados    OK | 
++-----------------------+
+SX6   OK(Filial 01, 02, 03 ,04)
+
++-----------------------+
+|Gatilhos criados    OK | 
++-----------------------+
+SX7   OK
+
++---------------------------------+
+|Dados importado contabilidade   OK | 
++---------------------------------+
+Lançamento padrão
+moeda contabil
+calendário
+plano referencial
+plano de contas
+estrutura contabil
+centro de custo
+Grupos contabeis
+
+*****************************************************************************************************************************
+*****************************************************************************************************************************
+*****************************************************************************************************************************
++--------------------------+
+|Ajustes e Teste sistema   | 
++--------------------------+
+
+TABELA SF4
+consulta padrão DJ
+CAMPO f4_xtpmov  - criado ok 
+
+Campos criados
+K1_XSTATUS ok
+ACG_XSTATUS ok
+C9_XWMSPED ok
+C9_XWMSEDI ok
+C9_XWMSQTE ok
+A3_OPERADO ok
+
+AUMENTA CAMPO
+ * E1_HIST para 150 CARATCERES  ok
+
+Fonte não encontrato
+U_MLDBSLCT  ok
+GMTMKA02  ok
+Exportar xml nfe
+U_XPUTSX1- reltório notas sem monitoramento ok
+
+GRUPO DE PERGUNTAS
+BFFISR01   -> criado ok    
+BFFATR06   -> criado ok    
+
+MODULO FATURAMENTO
+
+BRLub
+  Cadastros    ok sem erro
+    cadastro de ceps  ok
+  Pedidos de venda
+    Tela de análise  ok
+    Liberar Alçada   ok
+    Ver Log   ok
+    Tela Pendencia   ok
+    Alterar cabeçalho  ok
+    Gerenciador de Inadimplencia  ok
+
+  Faturamento 
+    Alterar transportadora  ok
+    Voltar pedido TMK   ok
+    Exportar xml nfe  ok
+    Boleto ok
+    Relatorio de notas  ok
+    Romaneio de entrada  ok
+    Cancelar Romaneio  OK
+    Cadastro custo  ok
+
+  Logistica   ok sem erro
+     
+  Contratos  ok
+
+  Expedição  ok sem erro
+     conferencia pedido  ok
+     envio de pedidos  ok
+     faturar pedidos   ok
+     impressão de notas   ok
+     relatório de Romaneio   ok
+
+Criação do Parametro MV_ESPECIE nas 4 filiais 1=SPED
+Criação de remessa e retorno Itau
+
+*****************************************************************************************************************************
+*****************************************************************************************************************************
+*****************************************************************************************************************************
+    SC6 - C6_XUPRCVE /                           C6_XPRCMIN / 
+    SE4 - E4_PALM
+    SK1 - K1_XSTATUS
+    ACG - ACG_XSTATU
+    SE1 - E1_HIST ( Ajustar tamanho para 250 ) 
+
+=> SX5 
+
+=> SX7 
+    ACG - ACG_TITULO  Retornando o campo ACG_XSTATU e conteudo U_GMTMKA03() // para auto preenchimento do Status
+
+
++--------------------------------------------------------------------+
+| Dados dos Menus de usu�rios que precisam ser migrados              |
++--------------------------------------------------------------------+
+=> SIGACOM 
+=> SIGAFAT 
+=> SIGACTB 
+
++--------------------------------------------------------------------+
+| Rdmakes validados para Migra��o                                    |
++--------------------------------------------------------------------+
+13 - CallCenter 
+    Atualiza��es 
+        BFTMKA01.PRW  - Calcula pre�o de venda liquido baseado em pre�o com ST/IPI 
+        BFTMKA04.PRW  - Valida��o da condi��o de pagamento se pode ser usada ou n�o 
+        GMTMKA01.PRW  - Compatibilizador para Nova Tela Gerenciamento Inadimplencia 
+        GMTMKA02.PRW  - Interface de Gerenciamento Inadimpl�ncia Grupo Meyer 
+    Consultas 
+        BFTMKC01.PRW  - A��o Tmk dentro da tela de atendimento
+        GMTMKC01.PRW  - Localiza �tlimo registro de compra do cliente do produto
+    Gatilhos 
+        BFTMKG01.PRW  - Gatilho utilizado para n�o carregar contato bloqueado automaticamente
+        BIG100.PRW    - Verifica data de entrega
+        BIG101.PRW    - 
+        BIG105.PRW    - Gatilho para avisar que o clientes � do grupo NEA
+        BIG106.PRW    - Gatilho para avisar que o clientes possui email invalido ou se participa de alguma promo��o
+        BIGINAD.PRW   - Envia alertas para usuario avisando se o cliente informado
+    Miscelania 
+        BFFATM10.PRW  - Retorna o armaz�m da CC2 se houver distribui��o pelo operador Logisitico 
+        BFTMKM01.PRW  - Retorna multiplo de litros para produtos a Granel 
+        BFTMKM05.PRW  - Vincula cliente com contato em tabela AC8
+        BFTMKM06.PRW  -
+    Pontos de Entrada 
+        TK070ROT.prw  - 
+        TK260ROT.prw  - 
+        TK271ABR.prw  - 
+        TK271BOK.prw  - 
+        TK271END.prw  - 
+        TKEVALI.prw   - 
+        TMK150DEL.prw - 
+        TMK380BTN.prw - 
+        TMKACTIVE.prw - 
+        TMKCBPRO.prw  - 
+        
+
+06 - Financeiro 
+    Atualiza��es    
+        BFFINA01.prw - Interface para lan�amento de c�digos de barras 
+        BFFINA05.prw - Rotina de impress�o de boletos - Precisa ser reconfigurado para a nova empresa 
+        BFFINA06.prw - Gera��o de arquivos Sispag - Safra 
+        BFFINA07.prw - Gera��o de arquivos Cnab Pagar HSBC 
+        BFFINA08.prw - Concilia��o banc�ria
+        DIS139.prw -   Gera��o de Arquivo Sispag - Ita� - precisa ser configurado para empresa nova 
+        ONFINA02.prw - Gera��o de arquivo sispag - Ita� Onixlub
+        
+    Gatilhos 
+        BFFING10.prw - Gatilho para retornar centro de custo 
+    
+    Miscelania 
+        Serasa
+            GeraRlt.prw - 
+            GrPefin.prw 
+            Imprime2.prw
+            RSerPefin.prw
+            SerPefin.prw 
+        BFFINM02.prw 
+        BFFINM06.prw 
+        BFFINM12.prw 
+        BFFINM13.prw 
+        BFFINM30.prw 
+        CodBar.prx 
+    
+    Pontos de Entrada 
+        F050BROW.prw - Ponto de entrada para adicionar bot�es na tela do Contas a Pagar 
+        F090AFIL.prw - Ponto de entrada 
+        F090CPOS.prw - Ponto de entrada 
+        F090QFIL.prw - Ponto de entrada 
+        F090REST.prw - Ponto de entrada 
+        F200PORT.prw - Ponto de entrada 
+        F290BTIT.prw - Ponto de Entrada 
+        FA050ALT.prw - Ponto de entrada 
+        FA050FIN.prw - ponto de entrada 
+        FA60FIL.prw  - Ponto de entrada 
+        FA100CA2.prw - Ponto de entrada 
+        FC010CON.prw - ponto de entrada 
+        FINA200.prw  - ponto de entrada 
+    
+    Relat�rios 
+        BFFINR01.prw - Relat�rio de t�tulos
+        BFFINR02.prw - Relat�rio de Hospedagens
+        FINR150.prw  - Relat�rio de contas a pagar - customizado 
+
+34 - Contabilidade Gerencial 
+    Gatilhos 
+        BFCTBG01.prw - Gatilho para pegar hist�rico do t�tulo pai na compensa��o 
+
+    Miscelania
+        BFCTBM01.prw - Rotina retornar Centro de custo conforme Lan�amento Padr�o 
+        BFCTBM20.prw - Rotina para atualizar lan�amentos cont�beis - de/para 
+        BFCTBM21.prw - Rotina para cadastro autom�tico de entidade cont�bil para Clientes 
+        BFCTBM23.prw - Rotina de importa��o da folha pagamento liquidos - Rubi 
+        BFCTBM24.prw - Fun��o para autocadastro de conta cont�bil de Fornecedor 
+        GMCTBM01.prw - Importa��o da folha Rubi - Contabiliza��o 
+    
+    Ponto de Entrada    
+        CTBA020.prw  - Ponto de entrada 
+
+    Relat�rios 
+        BFCTBR01.prw - Relat�rio do Plano de contas x Plano referencial 
+
+04 - Estoque/Custos
+    Atualiza��es 
+        BFESTA02.prw - Importa��o de invent�rio CSV 
+
+    Pontos de entrada 
+        AGRA045.prw  - Ponto de entrada 
+        QIEA030.prw  - Ponto de entrada 
+
+    Relat�rios 
+        BFESTR01.prw - Kardex aglutinado 
+        BFESTR02.prw - Relat�rio estoque por litros 
+        BFESTR03.prw - Relat�rio para gera��o de listagem para invent�rio 
+
+09 - Livros Fiscais 
+    Atualiza��es 
+        BFFISA01.prw - Cadastros de c�digos Cest 
+
+    Relat�rios 
+        BFFISR01.prw - Relat�rio de notas sem monitoramento Sefaz 
+        

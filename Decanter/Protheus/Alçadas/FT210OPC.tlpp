@@ -1,0 +1,31 @@
+#Include "tlpp-core.th"
+
+/*/{Protheus.doc} FT210OPC
+Este ponto de entrada é executado após a confirmação da liberação do pedido de venda por regra e antes do inicio da transação.
+Seu objetivo é permitir a interrupção do processo, mesmo com a confirmação do usuário.
+@author  Anderson Koziel - Vamilly
+@type Function
+@since   03/10/24
+@version 1.0
+@return  numeric, informa se continua a liberação ou não.
+@obs https://tdn.totvs.com/pages/releaseview.action?pageId=6784086
+/*/
+User Function FT210OPC()
+    // Local _nOpca := Paramixb[1] // Default: igual a 1 liberação continua
+    Local _nRet    := 1                                as Numeric
+    Local cUserLib := SuperGetMv("DC_USRLIB" ,.F., "") as Character
+    Local lAprHie  := SuperGetMv("DC_APRHIE" ,.F.)     as Logical // Habilita aprovação por Hierarquia.
+
+    If lAprHie
+        // Se p usuário não estiver contido no parametro, não deixa liberar.
+        If !RetCodUsr() $ AllTrim(cUserLib)
+
+            DBSelectArea("SCR")
+            SCR->(DBSetOrder(1))
+            If SCR->(DBSeek(SC5->C5_FILIAL+ "_A" + SC5->C5_NUM))
+                _nRet := 0  //Interrompe a liberação
+                FWAlertHelp("Este pedido ["+ SC5->C5_NUM +"] tem alçada.", "Apenas é possivel liberar pelas rotinas de alçada.")
+            EndIf
+        EndIf
+    EndIf
+Return _nRet

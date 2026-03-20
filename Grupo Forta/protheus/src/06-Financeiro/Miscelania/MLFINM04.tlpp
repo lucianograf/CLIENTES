@@ -1,0 +1,413 @@
+#include 'protheus.ch'
+#include 'topconn.ch'
+
+/*/{Protheus.doc} BFFATM41
+// Gerador csv para Irecebi
+@author Igor Lehmann De Quadra
+@since 23/10/2024
+@version 1.0
+@return
+@type function
+/*/
+User function MLFINM04()
+
+	Private lRPC
+	Private cLoc 		:= "\int_irecebi\"
+	cLoc += Space(180-Len(cLoc))
+	Private cArqCob 	:= "contasareceber.csv"
+
+	If Select("SM0") == 0
+
+		RPCSetType(3)
+		RPCSetEnv("01","0101")
+		sfExecRoti()
+		RpcClearEnv()
+	Else
+		sfExecRoti()
+
+	Endif
+Return
+
+
+/*/{Protheus.doc} SchedDef
+Rotina para agendamento no Schedule
+@author Marcelo Alberto Lauschner
+@since 16/07/2019
+@version 1.0
+@return ${return}, ${return_description}
+
+@type function
+/*/
+Static Function SchedDef()
+
+	Local	aOrd	:= {}
+	Local	aParam	:= {}
+
+	Aadd(aParam,"P")
+	Aadd(aParam,"PARAMDEF")
+	Aadd(aParam,"")
+	Aadd(aParam,aOrd)
+	Aadd(aParam,)
+
+Return aParam
+
+
+
+Static Function sfExecRoti()
+
+
+	If !IsBlind()
+		If Msgyesno("Deseja gerar csv de cobran as?")
+			MsgRun("Processando cobran as...","Cobran as",{||sfcobranca()})
+		EndIf
+	Else
+		sfcobranca()
+	Endif
+
+Return
+
+Static Function sfcobranca()
+
+	Local 	nHd
+	Local	cQry
+	Local	nCont
+	Local	cLin
+	Local	cSEP		:= ";"
+	Local	cEOL		:= "CHR(13)+CHR(10)"
+	Local 	aFilExec	:= {}
+	Local 	cBkFil		:= cFilAnt
+	Local 	iZ
+
+	Aadd(aFilExec,{"0101","Forta Tech"})
+	Aadd(aFilExec,{"0102","Forta Tech"})
+	Aadd(aFilExec,{"0104","Assistência"})
+	Aadd(aFilExec,{"0201","Forta FTA"})
+	Aadd(aFilExec,{"0202","Forta FTA"})
+	Aadd(aFilExec,{"0301","Forta Importadora"})
+	Aadd(aFilExec,{"0302","Forta Importadora"})
+	Aadd(aFilExec,{"0401","Dcondor"})
+	Aadd(aFilExec,{"0402","Dcondor"})
+	Aadd(aFilExec,{"0601","Baume"})
+
+	cEOL := Trim(cEOL)
+	cEOL := &cEOL
+
+	cArqCob := "contasareceber_"+DTOS(Date()) + ".csv"
+
+	MakeDir(cLoc )
+
+	If File(AllTrim(cLoc)+cArqCob)
+		fErase(AllTrim(cLoc)+cArqCob)
+	EndIf
+
+	nHd := fCreate(AllTrim(cLoc)+cArqCob)
+
+	If nHd == -1
+		If !isBlind()
+			MsgAlert("O arquivo " + AllTrim(cLoc)+cArqCob + " nao pode ser criado","Erro: "+ProcName(0)+"."+ Alltrim(Str(ProcLine(0))))
+		Else
+			ConOut( "O arquivo " + AllTrim(cLoc)+cArqCob + " nao pode ser criado" )
+		EndIf
+		Return .F.
+	Endif
+
+	nCont	:= 1
+
+	For iZ := 1 To Len(aFilExec)
+
+		cFilAnt := aFilExec[iZ][1]
+		cQry := ""
+		cQry +=   "SELECT "
+		cQry +=       "CASE "
+		cQry +=           "WHEN SA1.A1_PESSOA = 'F' THEN 'PF' "
+		cQry +=           "ELSE 'PJ' "
+		cQry +=       "END AS 'A1_PESSOA', "
+		cQry +=       "SA1.A1_CGC, "
+		cQry +=       "SA1.A1_NOME, "
+		cQry +=       "SE1.E1_NUM, "
+		cQry +=       "SE1.E1_PARCELA, "
+		cQry +=   	"FORMAT(CAST(SE1.E1_EMISSAO AS DATE), 'dd/MM/yyyy') AS 'E1_EMISSAO', "
+		cQry +=   	"FORMAT(CAST(SE1.E1_VENCREA AS DATE), 'dd/MM/yyyy') AS 'E1_VENCREA', "
+		cQry +=   	"FORMAT(CAST(SE1.E1_VENCTO AS DATE), 'MM/yyyy') AS 'E1_VENCTO', "
+		cQry +=   	"SE1.E1_SALDO, "
+		cQry +=		"' ' AS DET_PARC, "
+		cQry +=		"'"+aFilExec[iZ][2] + "' AS CART_CON, "
+		cQry +=		"' ' AS CAN_PREF, "
+		cQry +=   	"(SELECT TOP 1 SB1.B1_DESC "
+		cQry +=       " FROM " +RetSqlName("SD2") +" SD2 "
+		cQry +=   	"  INNER JOIN " +RetSqlName("SB1")+ " SB1 "
+		cQry += "         ON SB1.B1_COD = SD2.D2_COD  "
+		cQry +=        " AND SB1.B1_FILIAL = '" + xFilial("SB1") + "' "
+		cQry +=       "WHERE SD2.D2_DOC = SE1.E1_NUM "
+		cQry += "        AND SD2.D_E_L_E_T_ =' ' "
+		cQry +=        " AND SD2.D2_CLIENTE = SE1.E1_CLIENTE "
+		cQry +=        " AND SD2.D2_LOJA = SE1.E1_LOJA "
+		cQry +=        " AND SD2.D2_FILIAL = '" + xFilial("SD2") + "' "
+		cQry +=       "ORDER BY SD2.D2_TOTAL DESC) AS 'PRODUTO', "
+		cQry +=		"'1' AS END_COBR, "
+		cQry +=		"FORMAT(DATEADD(dd, 60, CAST(SE1.E1_VENCREA AS DATE)), 'dd/MM/yyyy') AS 'E1_VENCREA_60', "
+		cQry +=		"' ' AS BLACKLIST, "
+		cQry +=   	"CONCAT(A1_DDD, A1_TEL) AS 'A1_TEL', "
+		cQry +=       "SA1.A1_EMAIL, "
+		cQry +=       "SA1.A1_END, "
+		cQry +=       "SA1.A1_BAIRRO, "
+		cQry +=       "SA1.A1_MUN, "
+		cQry +=       "SA1.A1_EST, "
+		cQry +=       "SA1.A1_CEP, "
+		cQry +=		  "SA1.A1_FAX AS TELEFONE_2, "
+		cQry +=       "SA1.A1_BLEMAIL, "
+		cQry +=       "SA1.A1_ENDCOB, "
+		cQry +=       "SA1.A1_BAIRROC, "
+		cQry +=       "SA1.A1_MUNC, "
+		cQry +=       "SA1.A1_ESTC, "
+		cQry +=       "SA1.A1_CEPC, "
+		cQry +=		  "SA1.A1_TELEX AS TELEFONE_3, "
+		cQry +="       SE1.E1_CLIENTE + SE1.E1_LOJA CODCLIENTE,"
+		cQry +="       SE1.E1_CLIENTE,"
+		cQry += 	  "SE1.E1_LOJA,"
+		
+		cQry +=   	"(SELECT MAX(SF2.F2_CHVNFE) "
+		cQry +=       " FROM " +RetSqlName("SF2") +" SF2 "
+		cQry +=   	"  WHERE SF2.F2_DOC = SE1.E1_NUM "
+		cQry += "        AND SF2.D_E_L_E_T_ =' ' "
+		cQry +=        " AND SF2.F2_CLIENTE = SE1.E1_CLIENTE "
+		cQry +=        " AND SF2.F2_LOJA = SE1.E1_LOJA "
+		cQry +=        " AND SF2.F2_FILIAL = '" + xFilial("SF2") + "' "
+		cQry +=       ") AS 'CHAVENFE', "
+		cQry += "     E1_CODDIG "
+		cQry +=   " FROM " +RetSqlName("SE1") +" SE1"
+		cQry +=  " INNER JOIN " +RetSqlName("SA1")+ " SA1 "
+		cQry += "     ON SA1.D_E_L_E_T_ =' ' "
+		cQry += "    AND SA1.A1_CGC NOT IN(SELECT M0_CGC FROM SYS_COMPANY WHERE M0_CGC <>  ' ' AND D_E_L_E_T_ =' ' )"
+		cQry += "    AND SA1.A1_COD = SE1.E1_CLIENTE"
+		cQry += "    AND SA1.A1_LOJA = SE1.E1_LOJA "
+		cQry += "    AND SA1.A1_FILIAL = '" + xFilial("SA1") + "' "
+		cQry +=  " WHERE SE1.E1_SALDO > 0 "
+		cQry += "    AND SE1.D_E_L_E_T_ =' ' "
+		cQry += "    AND SE1.E1_TIPO NOT IN('NCC','RA','CC')"
+		cQry += "    AND SE1.E1_PORTADO NOT IN('888','777','323','396','998','886')" // Títulos de Cartão Crédito não devem ser enviados - adicionar 323-mercado pago
+
+		cQry += "    AND NOT EXISTS(SELECT C5_NUM "
+		cQry += "                     FROM " + RetSqlName("SC5")  + " C5 "
+		cQry += "                    WHERE C5.D_E_L_E_T_ = ' ' "
+		cQry += "                      AND C5_CONDPAG = '" + Iif(cFilAnt == "0101", "000","099") + "' "
+		cQry += "                      AND C5_NUM = E1_PEDIDO "
+		cQry += "                      AND C5_FILIAL = '" + xFilial("SC5") + "' )"
+		//Status 1-  serasa (jud)
+		//Status 3 - agendado ligação (devolvido jud)
+		//Status 6 - agendado depósito (cartao credito)
+		//K1_XSTATUS 	- Caractere tamanho 1 titulo=Situacao  Combo "1=Serasa","2=Inad.Nova","3=Retornar Ligação","4=Novo c/Histórico","5=Cartório","6=Agendado Depósito","7=Protestado","8=Sem Status"
+		cQry += "    AND NOT EXISTS(SELECT K1_XSTATUS "
+		cQry += "                     FROM "+ RetSqlName("SK1") + " K1 "
+		cQry += "                    WHERE K1.D_E_L_E_T_ = ' ' "
+		cQry += "                      AND K1_XSTATUS IN('6') "
+		cQry += "                      AND K1_PREFIXO = E1_PREFIXO "
+		cQry += "                      AND K1_PARCELA = E1_PARCELA "
+		cQry += "                      AND K1_TIPO = E1_TIPO "
+		cQry += "                      AND K1_NUM = E1_NUM "
+		cQry += "                      AND K1_FILIAL = '"+xFilial("SK1")+"') "
+		// Considera qualquer período - vencidos e a vencer 
+		//cQry += "    AND SE1.E1_VENCREA <= '" + DTOS(Date()+5) + "' " // Vencidos e a vencer em até 5 dias.
+		cQry += "    AND SE1.E1_FILIAL = '" + xFilial("SE1") + "' "
+
+		If Select("QRY") <> 0
+			QRY->(dbCloseArea())
+		EndIf
+
+		TCQUERY cQry NEW ALIAS "QRY"
+
+
+
+		While QRY->(!EOF())
+			cLin    := ""
+			If (nCont = 1)
+				nCont++
+				cLin += "TIPO PF/PJ"+cSEP
+				cLin += "CNPJ /CNPJ"+cSEP
+				cLin += "NOME" + cSEP
+				cLin += "NUMERO DO CONTRATO" + cSEP
+				cLin += "NUMERO DA PARCELA" + cSEP
+				cLin += "DATA DE EMISSAO - RECIBO" + cSEP
+				cLin += "VENCIMENTO" + cSEP
+				cLin += "COMPETENCIA" + cSEP
+				cLin += "VALOR" + cSEP
+				cLin += "DETALHE DA PARCELA" + cSEP
+				cLin += "CARTEIRA DE CONTRATO" + cSEP
+				cLin += "CANAL DE PREFERENCIA" + cSEP
+				cLin += "EQUIPAMENTO / PRODUTO" + cSEP
+				cLin += "END. COBRAN A (1 ou 2)" + cSEP
+				cLin += "PERIODO COBRANCA" + cSEP
+				cLin += "BLACKLIST" + cSEP
+				cLin += "TELEFONE 1" + cSEP
+				cLin += "E-MAIL 1" + cSEP
+				cLin += "ENDERECO 1" + cSEP
+				cLin += "BAIRRO 1" + cSEP
+				cLin += "CIDADE 1" + cSEP
+				cLin += "UF 1" + cSEP
+				cLin += "CEP 1" + cSEP
+				cLin += "TELEFONE 2" + cSEP
+				cLin += "E-MAIL 2" + cSEP
+				cLin += "ENDERECO 2" + cSEP
+				cLin += "BAIRRO 2" + cSEP
+				cLin += "CIDADE 2" + cSEP
+				cLin += "UF 2" + cSEP
+				cLin += "CEP 2" + cSEP
+				cLin += "TELEFONE 3" + cSEP
+				cLin += "E-MAIL 3" + cSEP
+				cLin += "ENDERECO 3" + cSEP
+				cLin += "BAIRRO 3" + cSEP
+				cLin += "CIDADE 3" + cSEP
+				cLin += "UF 3" + cSEP
+				cLin += "CEP 3" + cSEP
+				cLin += "BOLETO" + cSEP
+				cLin += "NF" + cSEP
+				cLin += "COD CLIENTE" + cSEP 
+				cLin += cEOL
+			EndIF
+
+			cLin += QRY->A1_PESSOA + cSEP
+			cLin += QRY->A1_CGC + cSEP
+			cLin += Alltrim(QRY->A1_NOME) + cSEP
+			cLin += QRY->E1_NUM + cSEP
+			cLin += QRY->E1_PARCELA + cSEP
+			cLin += Alltrim(QRY->E1_EMISSAO) + cSEP
+			cLin += Alltrim(QRY->E1_VENCREA) + cSEP
+			cLin += Alltrim(QRY->E1_VENCTO) + cSEP
+			cLin += Transform(QRY->E1_SALDO,"@E 999,999,999.99") + cSEP
+			cLin += QRY->DET_PARC + cSEP
+			cLin += QRY->CART_CON + cSEP
+			cLin += QRY->CAN_PREF + cSEP
+
+			cQry := "SELECT DISTINCT SB1.B1_DESC "
+			cQry += "  FROM " +RetSqlName("SF2") +" SF2 "
+			cQry += " INNER JOIN " +RetSqlName("SD2")+ " SD2 "
+			cQry += "    ON SD2.D_E_L_E_T_ = ' ' "
+			cQry += "   AND SD2.D2_LOJA = SF2.F2_LOJA "
+			cQry += "   AND SD2.D2_CLIENTE = SF2.F2_CLIENTE "
+			cQry += "   AND SD2.D2_SERIE = SF2.F2_SERIE "
+			cQry += "   AND SD2.D2_DOC = SF2.F2_DOC "
+			cQry += "   AND SD2.D2_FILIAL = '" + xFilial("SD2") + "' "
+			cQry += " INNER JOIN " +RetSqlName("SB1")+ " SB1 "
+			cQry += "    ON SB1.D_E_L_E_T_ = ' ' "
+			cQry += "   AND SB1.B1_COD = SD2.D2_COD  "
+			cQry += "   AND SB1.B1_FILIAL = '" + xFilial("SB1") + "' "
+			cQry += " WHERE SF2.D_E_L_E_T_ =' ' "
+			cQry += "   AND SF2.F2_CHVNFE = '" + QRY->CHAVENFE + "' "
+			cQry += "   AND SF2.F2_DUPL = '" + QRY->E1_NUM + "' "
+			cQry += "   AND SF2.F2_DOC = '" + QRY->E1_NUM + "' "
+			cQry += "   AND SF2.F2_LOJA = '" + QRY->E1_LOJA + "' "
+			cQry += "   AND SF2.F2_CLIENTE = '" + QRY->E1_CLIENTE + "' "
+			cQry += "   AND SF2.F2_FILIAL = '" + xFilial("SF2") + "' "
+			
+			TcQuery cQry New Alias "QSB1"
+
+			If !Eof()
+				While !(QSB1->(Eof()))
+					cLin += Alltrim(StrTran(QSB1->B1_DESC,cSEP," ") ) + " / "
+					QSB1->(DbSkip())
+				Enddo
+				cLin += cSEP
+			Else
+				cLin += Alltrim(QRY->PRODUTO) + cSEP
+			Endif
+			QSB1->(DbCloseArea())
+
+			cLin += Alltrim(QRY->END_COBR) + " "+cSEP
+			cLin += QRY->E1_VENCREA_60 + cSEP
+			cLin += QRY->BLACKLIST + cSEP
+			cLin += Alltrim(QRY->A1_TEL) + " "+cSEP
+			cLin += Alltrim(StrTran(QRY->A1_EMAIL,";"," / ")) + " "+cSEP
+			cLin += Alltrim(QRY->A1_END) + " "+cSEP
+			cLin += Alltrim(QRY->A1_BAIRRO) + " "+cSEP
+			cLin += Alltrim(QRY->A1_MUN) +" "+ cSEP
+			cLin += QRY->A1_EST + cSEP	// Uf 1 
+			cLin += QRY->A1_CEP + cSEP 	// Cep 1 
+			cLin += Alltrim(QRY->TELEFONE_2) + " " + cSEP	// Telefone 2 
+			cLin += Alltrim(QRY->A1_BLEMAIL) +" "+ cSEP  // Email 2
+			cLin += Alltrim(QRY->A1_ENDCOB) + " " + cSEP // Endereço 2
+			cLin += Alltrim(QRY->A1_BAIRROC) +" "+ cSEP // Bairro 2
+			cLin += Alltrim(QRY->A1_MUNC) + " " + cSEP // Cidade 2
+			cLin += QRY->A1_ESTC + cSEP // Uf 2 
+			cLin += QRY->A1_CEPC + cSEP // Cep 2
+			cLin += Alltrim(QRY->TELEFONE_3) + " " + cSEP // Telefone 3 
+			cLin += " " + cSEP // Email 3	
+			cLin += " " + cSEP // Endereço 3
+			cLin += " " + cSEP // Bairro 3
+			cLin += " " + cSEP // Cidade 3
+			cLin += " " + cSEP // Uf 3
+			cLin += " " + cSEP // Cep 3		
+			cLin += QRY->E1_CODDIG + cSEP
+			cLin += "https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=7PhJ+gAVw2g="+QRY->CHAVENFE + cSEP
+			cLin += Alltrim(QRY->CODCLIENTE) +" '" + cSEP // Cod Cliente 
+			cLin += cEOL
+
+			dbSelectArea("QRY")
+			QRY->(dbSkip())
+
+			If fWrite(nHd,cLin,Len(cLin)) != Len(cLin)
+				If !isBlind()
+					MsgAlert("Ocorreu um erro na gravacao do arquivo [" + AllTrim(cLoc)+cArqCob + "]","Erro: "+ProcName(0)+"."+ Alltrim(Str(ProcLine(0))))
+				Else
+					ConOut("Ocorreu um erro na gravacao do arquivo [" + AllTrim(cLoc)+cArqCob + "]")
+				EndIf
+				QRY->(dbCloseArea())
+				Return .F.
+			Endif
+
+		EndDo
+
+		QRY->(dbCloseArea())
+	Next
+	fClose(nHd)
+
+	sfFTPCON(cLoc,cArqCob)
+
+	cFilAnt := cBkFil
+
+Return .T.
+
+/*/{Protheus.doc} sfFTPCON
+Função para conectar no SFTP e efetuar upload do arquivo 
+@type function
+@version  
+@author Lauschner Consulting Ltda - Marcelo Alberto Lauschner
+@since 04/12/2024
+@param cInDir, character, param_description
+@param cInNameFile, character, param_description
+@return variant, return_description
+/*/
+Static Function sfFTPCON(cInDir,cInNameFile)
+	Local aArea		:= GetArea()
+	Local lRet		:= .T.
+	Local cEndereco := 'app.irecebi.com'
+	Local nPorta	:= 22
+	Local cUsr 		:= 'forta'
+	//Local Protocolo: SFTP
+	Local cPass 	:='UhT6b=*v6Hw'
+	Local cPasta	:= '/dados/'
+
+	//Se conseguir conectar
+	Local oSftp1 	:= tSFTPClient():new()
+	Local nRet1 	:= oSftp1:Connect(cEndereco ,cValToChar(nPorta),cUsr ,cPass)
+
+	If (nRet1 <> 0)
+		ConOut("Falha em conectar ao servidor SFTP")
+		Return .F.
+	endif
+
+	nRet2 := oSftp1:SendFile(Alltrim(cInDir) +  Alltrim(cInNameFile),Alltrim(cPasta) + Alltrim(cInNameFile))
+	if (nRet2 <> 0)
+		ConOut("Falha em enviar o arquivo para o servidor SFTP")
+		return .F.
+	endif
+
+	nRet2 := oSftp1:Disconnect()
+	if (nRet2 <> 0)
+		conOut("Falha em desconectar ao servidor SFTP")
+		return .F.
+	endif
+
+
+	RestArea(aArea)
+
+Return lRet

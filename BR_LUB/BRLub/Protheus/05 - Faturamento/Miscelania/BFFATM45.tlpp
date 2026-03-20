@@ -1,0 +1,260 @@
+#include "totvs.ch"
+
+/*/{Protheus.doc} BFFATM45
+Rotina para atualizar preços de venda em função do novo custo médio 
+@type function
+@version  
+@author Marcelo Alberto Lauschner
+@since 16/11/2021
+@return variant, return_description
+/*/
+User Function BFFATM45()
+
+    // Criar o parâmetro com cliente e loja padrão por filial 
+    Local   cCliPad     := GetNewPar("ON_BFTM45A","000001")
+    Local   cLojPad     := GetNewPar("ON_BFTM45B","09")
+
+	Local 	nPrc28DD	:= 0 
+
+    nPrc28DD	:= sfCalcPrcVen("89030.024001   ","01",cCliPad,cLojPad)
+
+	//If nPrc28DD > 0 
+		MsgAlert(nPrc28DD,"Preço de 28DD")
+	//Endif 
+
+    
+Return
+
+
+Static Function sfCalcPrcVen(cInCodPro,cInLocPad,cInCodCli,cInLojCli)
+
+	Local   aFisGetSC5      := {}
+	Local   nY
+    Local   nCusto          := 0    // Valor de estoque 
+    Local   nPICM           := 0    // Percentual de Icms 
+    Local   nPPis           := 0    // Percentual de Pis 
+    Local   nPCof           := 0    // Percentual de Cofins 
+    Local   nPMG2B1         := 0    // Percentual de Margem 
+    Local   nPMG2BM         := 0    // Percentual de Margem 
+    Local   nPIPI           := 0    // Percentual de IPI 
+    Local   nValSol         := 0    // Valor de Solidário 
+    Local   nPMG1PrcVen     := 0    // Percentuais incidentes sobre o preço de venda 
+    Local   nPrcSimula      := 1000 // Simula os percentuais a partir de um preço ficticio 
+    Local   nPrcRet         := 0    // Valor calculado a ser retornado 
+    Local   aAreaOld        := GetArea()
+
+	// Efetua abertura do SX3 via função OpenSX
+	sfOpenSx3(cEmpAnt)
+
+    DbSelectArea("SB2")
+	SB2->(dbSetOrder(1))
+	If SB2->(MsSeek(xFilial("SB2")+cInCodPro+cInLocPad))
+        nCusto  := SB2->B2_CM1
+    Endif 
+
+   	cQry := "SELECT ONIX_B2CUSTO2021('"+cInCodPro+"','"+cInLocPad+"','"+cFilAnt+"') NEW_CUSTO FROM DUAL "
+	dbUseArea(.T.,"TOPCONN", TCGenQry(,,cQry),'QZ11', .F., .T.)			
+	If !Eof()
+		nCusto	:= Iif(QZ11->NEW_CUSTO > nCusto, QZ11->NEW_CUSTO,nCusto )
+	Endif 
+	QZ11->(DbCloseArea())
+
+    DbSelectArea("SA1")
+    DbSetOrder(1)
+    DbSeek(xFilial("SA1")+cInCodCli+cInLojCli)
+
+	// Posiciona no Produto
+	DbSelectArea("SB1")
+	DbSetOrder(1)
+	DbSeek(xFilial("SB1")+cInCodPro)	
+    nPMG2B1     := SB1->B1_XMG2MIN
+
+    // Posiciona no Grupo de produto 
+    DbSelectArea("SBM")
+    DbSetOrder(1)
+    DbSeek(xFilial("SBM")+SB1->B1_GRUPO)
+    nPMG2BM     := SBM->BM_XMG2MIN
+
+	// Se não houver percentual cadastrado para o Produto ou Grupo - Abandona 
+	If nPMG2BM + nPMG2B1 <= 0 
+		Return 0
+	Endif 
+    // Posiciona no TES 
+	DbSelectArea("SF4")
+	DbSetOrder(1)
+	DbSeek(xFilial("SF4")+SB1->B1_TS)
+
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Busca referencias no SC6                     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aFisGet	:= {}
+	dbSelectArea("QSX3")
+	dbSetOrder(1)
+	MsSeek("SC6")
+	While !Eof() .And. QSX3->X3_ARQUIVO == "SC6"
+		cValid := UPPER(QSX3->X3_VALID+QSX3->X3_VLDUSER)
+		If 'MAFISGET("'$cValid
+			nPosIni 	:= AT('MAFISGET("',cValid)+10
+			nLen		:= AT('")',Substr(cValid,nPosIni,Len(cValid)-nPosIni))-1
+			cReferencia := Substr(cValid,nPosIni,nLen)
+			aAdd(aFisGet,{cReferencia,QSX3->X3_CAMPO,MaFisOrdem(cReferencia)})
+		EndIf
+		If 'MAFISREF("'$cValid
+			nPosIni		:= AT('MAFISREF("',cValid) + 10
+			cReferencia	:=Substr(cValid,nPosIni,AT('","MT410",',cValid)-nPosIni)
+			aAdd(aFisGet,{cReferencia,QSX3->X3_CAMPO,MaFisOrdem(cReferencia)})
+		EndIf
+		dbSkip()
+	EndDo
+	aSort(aFisGet,,,{|x,y| x[3]<y[3]})
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Busca referencias no SC5                     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aFisGetSC5	:= {}
+	dbSelectArea("QSX3")
+	dbSetOrder(1)
+	MsSeek("SC5")
+	While !Eof() .And. QSX3->X3_ARQUIVO =="SC5"
+		cValid := UPPER(QSX3->X3_VALID+QSX3->X3_VLDUSER)
+		If 'MAFISGET("'$cValid
+			nPosIni 	:= AT('MAFISGET("',cValid)+10
+			nLen		:= AT('")',Substr(cValid,nPosIni,Len(cValid)-nPosIni))-1
+			cReferencia := Substr(cValid,nPosIni,nLen)
+			aAdd(aFisGetSC5,{cReferencia,QSX3->X3_CAMPO,MaFisOrdem(cReferencia)})
+		EndIf
+		If 'MAFISREF("'$cValid
+			nPosIni		:= AT('MAFISREF("',cValid) + 10
+			cReferencia	:=Substr(cValid,nPosIni,AT('","MT410",',cValid)-nPosIni)
+			aAdd(aFisGetSC5,{cReferencia,QSX3->X3_CAMPO,MaFisOrdem(cReferencia)})
+		EndIf
+		dbSkip()
+	EndDo
+	aSort(aFisGetSC5,,,{|x,y| x[3]<y[3]})
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa a funcao fiscal                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	MaFisSave()
+	MaFisEnd()
+	MaFisIni(cInCodCli,;                        // 1-Codigo Cliente/Fornecedor
+	cInLojCli,;		                            // 2-Loja do Cliente/Fornecedor
+	"C",;	                        			// 3-C:Cliente , F:Fornecedor
+	"N",;	        			                // 4-Tipo da NF
+	"R",;       		                        // 5-Tipo do Cliente/Fornecedor
+	Nil,;
+		Nil,;
+		Nil,;
+		Nil,;
+		"MATA461",;
+		Nil,;
+		Nil,;
+		Nil,;
+		Nil,;
+		Nil,;
+		Nil,;
+		Nil,;
+		{"",""})
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Realiza alteracoes de referencias do SC5         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Len(aFisGetSC5) > 0
+		dbSelectArea("SC5")
+		For ny := 1 to Len(aFisGetSC5)
+			If !Empty(&("M->"+Alltrim(aFisGetSC5[ny][2])))
+				MaFisAlt(aFisGetSC5[ny][1],&("M->"+Alltrim(aFisGetSC5[ny][2])),,.F.)
+			EndIf
+		Next
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Calcula o preco de lista                     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+	MaFisAdd(	cInCodPro,;   		// 1-Codigo do Produto ( Obrigatorio )
+	SB1->B1_TS,;	   		        // 2-Codigo do TES ( Opcional )
+	1,; 	 		                // 3-Quantidade ( Obrigatorio )
+	nPrcSimula,;                	// 4-Preco Unitario ( Obrigatorio )
+	0,;         					// 5-Valor do Desconto ( Opcional )
+	"",;	   						// 6-Numero da NF Original ( Devolucao/Benef )
+	"",;							// 7-Serie da NF Original ( Devolucao/Benef )
+	0,;								// 8-RecNo da NF Original no arq SD1/SD2
+	0,;								// 9-Valor do Frete do Item ( Opcional )
+	0,;								// 10-Valor da Despesa do item ( Opcional )
+	0,;								// 11-Valor do Seguro do item ( Opcional )
+	0,;								// 12-Valor do Frete Autonomo ( Opcional )
+	nPrcSimula,; 					// 13-Valor da Mercadoria ( Obrigatorio )
+	0,;								// 14-Valor da Embalagem ( Opiconal )
+	,;								// 15
+	,;								// 16
+	"",;                            // 17
+	0,;								// 18-Despesas nao tributadas - Portugal
+	0,;								// 19-Tara - Portugal
+	"",;             			    // 20-CFO
+	{},;	           			    // 21-Array para o calculo do IVA Ajustado (opcional)
+	"")								// 22-Codigo Retencao - Equador
+
+
+	nPIPI		:= MaFisRet(1,"IT_ALIQIPI")     // IT_BASEIPI / IT_ALIQIPI / IT_VALIPI
+	nValSol     := MaFisRet(1,"IT_VALSOL")      // IT_BASESOL / IT_MARGEM  / IT_VALSOL
+	nPICM 		:= MaFisRet(1,"IT_ALIQICM")     // IT_BASEICM / IT_ALIQICM / IT_VALICM
+    nPPis       := MaFisRet(1,"IT_ALIQPS2")     // IT_BASEPS2 / IT_VALPS2 // IT_ALIQPS2
+    nPCof       := MaFisRet(1,"IT_ALIQCF2")     // IT_BASECF2 / IT_VALCF2 // IT_ALIQCF2 
+
+	
+    // Percentuais incidentes sobre o preço de venda 
+    nPMG1PrcVen += nPICM    // Somo ICMS 
+    nPMG1PrcVen += nPPis    // Somo Pis 
+    nPMG1PrcVen += nPCof    // Somo Cofins 
+    // Se tiver Solidário - Verifica o custo do mesmo 
+    If nValSol  > 0 
+        nPMG1PrcVen += Round(nValSol / nPrcSimula * 100,2)
+    Endif 
+    If nPIPI > 0 
+        nPMG1PrcVen += Round(MaFisRet(1,"IT_VALIPI") / nPrcSimula * 100,2)
+    Endif 
+
+	MaFisEnd()
+	MaFisRestore()
+    
+    // Soma o valor da margem desejada 
+    If nPMG2B1 > 0 
+        nPMG1PrcVen += nPMG2B1
+    ElseIf nPMG2BM > 0 
+        nPMG1PrcVen += nPMG2BM 
+    Endif 
+
+    // Efetua o cálculo do preço mímimo em função da margem desejada e impostos incidentes sobre o preço de venda. 
+    nPrcRet := Round( nCusto /  (1 - (nPMG1PrcVen  / 100)),2)
+
+	
+	RestArea(aAreaOld)
+
+Return nPrcRet
+
+
+
+/*/{Protheus.doc} sfOpenSx3
+//TODO Função para abertura do SX3 via função OpenSXS
+@author Marcelo Alberto Lauschner 
+@since 05/04/2020
+@version 1.0
+@return ${return}, ${return_description}
+@param cEmp, characters, descricao
+@type function
+/*/
+Static Function sfOpenSx3(cEmp)
+
+	Local lOk	:=	.T.
+	If Select("QSX3") > 0
+		QSX3->(DBCloseArea())
+	Endif
+	OpenSxs(,,,,cEmp,"QSX3","SX3",,.F.)
+
+	If Select("QSX3") == 0
+		lOk := .F.
+	Endif
+
+Return lOk

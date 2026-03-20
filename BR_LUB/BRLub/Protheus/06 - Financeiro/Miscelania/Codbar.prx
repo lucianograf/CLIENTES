@@ -1,0 +1,269 @@
+#include "totvs.ch"
+
+/*/{Protheus.doc} CodBar
+(long_description)
+	
+@author MarceloLauschner
+@since 26/02/1997
+@version 1.0		
+
+@return array , {logico,data vencimento,valor}
+
+@example
+(examples)
+
+@see (links_or_references)
+/*/
+User Function CodBar(cInStr,lForceDate)
+
+	Local		cStr		:= ""
+	Local		lRet		:= .F.
+	Local		cTipo		:= ""
+	Local		nConta		:= 0
+	Local		nMult		:= 0
+	Local		nVal		:= 0
+	Local		nDV			:= 0
+	Local		cCampo		:= ""
+	Local		iX
+	Local		nMod
+	Local		nDVCalc
+	Local		aRetDados	:= {.F.,dDataBase,0,"",0}
+	Local		nTipCB		:= 0
+	Local		nValor		:= 0
+	Local		nFator		:= 0
+	Local		dDtVencOri	:= dDataBase
+	Local		lContinua	:= .T.
+	Default	cInStr		:= M->E2_CODBAR
+	Default 	lForceDate	:= .F.
+///--------------------------------------------------------------------------\
+//| Função: CODBAR				Autor: Flávio Novaes		    Data: 19/10/2003 |
+//|--------------------------------------------------------------------------|
+//| Essa Função foi desenvolvida com base no Manual do Bco. Itaú e no RDMAKE:|
+//| CODBARVL - Autor: Vicente Sementilli - Data: 26/02/1997.                 |
+//|--------------------------------------------------------------------------|
+//| Descrição: Função para Validação de Código de Barras (CB) e Representação|
+//|            Numérica do Código de Barras - Linha Digitável (LD).			|
+//|                                                                          |
+//|            A LD de Bloquetos possui três Digitos Verificadores (DV) que  |
+//|				 são consistidos pelo Módulo 10, além do Dígito Verificador    |
+//|				 Geral (DVG) que é consistido pelo Módulo 11. Essa LD têm 47   |
+//|            Dígitos.                                                      |
+//|                                                                          |
+//|            A LD de Títulos de Concessinárias do Serviço Público e IPTU   |
+//|				 possui quatro Digitos Verificadores (DV) que são consistidos  |
+//|            pelo Módulo 10, além do Digito Verificador Geral (DVG) que    |
+//|            também é consistido pelo Módulo 10. Essa LD têm 48 Dígitos.   |
+//|                                                                          |
+//|            O CB de Bloquetos e de Títulos de Concessionárias do Serviço  |
+//|            Público e IPTU possui apenas o Dígito Verificador Geral (DVG) |
+//|            sendo que a única diferença é que o CB de Bloquetos é         |
+//|            consistido pelo Módulo 11 enquanto que o CB de Títulos de     |
+//|            Concessionárias é consistido pelo Módulo 10. Todos os CB´s    |
+//|            têm 44 Dígitos.                                               |
+//|                                                                          |
+//|            Para utilização dessa Função, deve-se criar o campo E2_CODBAR,|
+//|            Tipo Caracter, Tamanho 48 e colocar na Validação do Usuário:  |
+//|            EXECBLOCK("CODBAR",.T.).                                      |
+//|                                                                          |
+//|            Utilize também o gatilho com a Função CONVLD() para converter |
+//|            a LD em CB.															|
+//\--------------------------------------------------------------------------/
+
+//23792693079035600741021002772008200000000072864
+//23790049026032196773384018940001932373
+//0339500000000000000 9108650200000005090510102
+// Retorna .T. se o Campo estiver em Branco.  
+
+
+	If ValType(cInStr) == Nil .Or. Empty(cInStr)
+	Return(.T.)
+	Endif
+
+	cStr := LTrim(RTrim(cInStr))
+
+// Se o Tamanho do String for 45 ou 46 está errado! Retornará .F.
+	lRet := If(Len(cStr)==45 .Or. Len(cStr)==46,.F.,.T.)
+
+// Se o Tamanho do String for menor que 44, completa com zeros até 47 dígitos. Isso é
+// necessário para Bloquetos que NÂO têm o vencimento e/ou o valor informados na LD.
+	cStr := If(Len(cStr)<44,cStr+REPL("0",47-LEN(cStr)),cStr)
+
+// Verifica se a LD é de (B)loquetos ou (C)oncessionárias/IPTU. Se for CB retorna (I)ndefinido.
+	cTipo := IF(LEN(cStr)==47,"B",IF(LEN(cStr)==48,"C","I"))
+
+// Verifica se todos os dígitos são numérios.
+	For iX := Len(cStr) To 1 Step -1
+		lRet := If(Substr(cStr,iX,1) $ "0123456789",lRet,.F.)
+	Next
+
+	If Len(cStr) == 47 .And. lRet
+	// Consiste os três DV´s de Bloquetos pelo Módulo 10.
+		nConta  := 1
+		While nConta <= 3
+			nMult  := 2
+			nVal   := 0
+			nDV    := Val(Substr(cStr,If(nConta==1,10,If(nConta==2,21,32)),1))
+			cCampo := Substr(cStr,If(nConta==1,1,If(nConta==2,11,22)),If(nConta==1,9,10))
+			For iX := Len(cCampo) To 1 Step -1
+				nMod  := Val(Substr(cCampo,iX,1)) * nMult
+				nVal  := nVal + If(nMod>9,1,0) + (nMod-IF(nMod>9,10,0))
+				nMult := If(nMult==2,1,2)
+			Next
+			nDVCalc := 10-MOD(nVal,10)
+		// Se o DV Calculado for 10 é assumido 0 (Zero).
+			nDVCalc := If(nDVCalc==10,0,nDVCalc)
+			lRet    := If(lRet,(nDVCalc==nDV),.F.)
+			nConta  := nConta + 1
+		Enddo
+	// Se os DV´s foram consistidos com sucesso (lRet=.T.), converte o número para CB para consistir o DVG.
+		cStr := If(lRet,Substr(cStr,1,4)+ Substr(cStr,33,15)+ Substr(cStr,5,5)+ Substr(cStr,11,10)+ Substr(cStr,22,10),cStr)
+	Endif
+
+	If Len(cStr) == 48 .And. lRet
+	// Consiste os quatro DV´s de Títulos de Concessionárias de Serviço Público e IPTU pelo Módulo 10.
+		nConta  := 1
+		While nConta <= 4
+			nMult  := 2
+			nVal   := 0
+			nDV    := Val(Substr(cStr,If(nConta==1,12,If(nConta==2,24,If(nConta==3,36,48))),1))
+			cCampo := Substr(cStr,If(nConta==1,1,If(nConta==2,13,If(nConta==3,25,37))),11)
+			For iX := 11 To 1 Step -1
+				nMod  := Val(Substr(cCampo,iX,1)) * nMult
+				nVal  := nVal + If(nMod>9,1,0) + (nMod-IF(nMod>9,10,0))
+				nMult := If(nMult==2,1,2)
+			NEXT
+			nDVCalc := 10-MOD(nVal,10)
+		// Se o DV Calculado for 10 é assumido 0 (Zero).
+			nDVCalc := If(nDVCalc==10,0,nDVCalc)
+			lRet    := If(lRet,(nDVCalc==nDV),.F.)
+			nConta  := nConta + 1
+		Enddo
+	// Se os DV´s foram consistidos com sucesso (lRet=.T.), converte o número para CB para consistir o DVG.
+		cStr := If(lRet,Substr(cStr,1,11)+ Substr(cStr,13,11)+ Substr(cStr,25,11)+ Substr(cStr,37,11),cStr)
+	Endif
+
+	If Len(cStr) == 44 .And. lRet
+		If cTipo $ "BI"
+		// Consiste o DVG do CB de Bloquetos pelo Módulo 11.
+			nMult  := 2
+			nVal   := 0
+			nDV    := Val(Substr(cStr,5,1))
+			cCampo := Substr(cStr,1,4)+ Substr(cStr,6,39)
+			For iX := 43 To 1 Step -1
+				nMod  := Val(Substr(cCampo,iX,1)) * nMult
+				nVal  := nVal + nMod
+				nMult := If(nMult==9,2,nMult+1)
+			Next
+			nDVCalc := 11-MOD(nVal,11)
+		// Se o DV Calculado for 0,10 ou 11 é assumido 1 (Um).
+			nDVCalc := If(nDVCalc==0 .Or. nDVCalc==10 .Or. nDVCalc==11,1,nDVCalc)
+			lRet    := If(lRet,(nDVCalc==nDV),.F.)
+		// Se o Tipo é (I)ndefinido E o DVG NÂO foi consistido com sucesso (lRet=.F.), tentará
+		// consistir como CB de Título de Concessionárias/IPTU no IF abaixo.
+		
+			nFator	:= Val(Substr(cStr,6,4))				// 	06-09 - Fator de Vencimento
+			nValor := Val(Substr(cStr,10,10))/100		//	10-19 - Valor do titulo
+			
+			// Se for documento de Arrecadação 
+			If Substr(cStr,1,1) == "8"
+				//83620000015025300860005346945020612201340000
+				//12345678901234567890123456789012345678901234
+				// 12345678901  23456789012  34567890123  45678901234 
+				// 836200000153-025300860001-534694502061-122013400009 - 16/12/2013 R$ 1.502,53 02.016.440/0001-62
+				// 846600000000-690000208171-987933201319-101188000000 - 16/11/2013 R$ 69,00    
+				// 846200000004-687400208157-609546201318-101129000002 - 16/11/2013 R$ 68,74
+				
+				If Substr(cStr,3,1) == "6" 	// 03-03 Identificação Valor Real ou referencia 	6=Valor a ser cobrado efetivamente em reais - Modulo 10
+												//														7=Quantidade de moeda - Modulo 10
+												//														8=Valor a ser cobrado efetiavamente em reais - Modulo 11
+												//														9=Quantidade de Moeda - Modulo 11	 		 
+					If lForceDate
+						lContinua 	:= .F.
+	
+						DEFINE MSDIALOG oPerg FROM 001,001 TO 100,350 OF oMainWnd PIXEL TITLE OemToAnsi("Informe a data de vencimento")
+	
+						@ 020,020 SAY "Vencimento" of oPerg pixel
+						@ 018,085 MSGET dDtVencOri of oPerg pixel
+	
+						ACTIVATE MSDIALOG oPerg ON INIT EnchoiceBar(oPerg,{|| lContinua	:= .T. /*true*/,oPerg:End()},{|| oPerg:End()},,) CENTERED
+	
+						If !lContinua
+							nFator	:=	0
+						Else
+							nFator := dDtVencOri - CTOD("07/10/1997")
+						Endif
+					Endif
+					nValor	:=	Val(Substr(cStr,05,11))/100	// 05-15 Tamanho 11
+					nTipCB	:= 1
+				Endif
+			Endif
+			
+			aRetDados	:= { lRet ,DTOS(CTOD("07/10/1997")+nFator) ,nValor,cStr,nTipCB}
+		Endif
+		
+		If cTipo == "C" .Or. (cTipo == "I" .And. !lRet)
+		// Consiste o DVG do CB de Títulos de Concessionárias pelo Módulo 10.
+			lRet   := .T.
+			nMult  := 2
+			nVal   := 0
+			nDV    := Val(Substr(cStr,4,1))
+			cCampo := Substr(cStr,1,3)+ Substr(cStr,5,40)
+			For iX := 43 To 1 Step -1
+				nMod  := Val(Substr(cCampo,iX,1)) * nMult
+				nVal  := nVal + If(nMod>9,1,0) + (nMod-IF(nMod>9,10,0))
+				nMult := If(nMult==2,1,2)
+			NEXT
+			nDVCalc := 10-MOD(nVal,10)
+		// Se o DV Calculado for 10 é assumido 0 (Zero).
+			nDVCalc := If(nDVCalc==10,0,nDVCalc)
+			lRet    := If(lRet,(nDVCalc==nDV),.F.)
+			
+			nFator	:= Val(Substr(cStr,6,4))				// 	06-09 - Fator de Vencimento
+			nValor := Val(Substr(cStr,10,10))/100		//	10-19 - Valor do titulo
+
+			// Se for documento de Arrecadação 
+			If Substr(cStr,1,1) == "8"
+				//83620000015025300860005346945020612201340000
+				//12345678901234567890123456789012345678901234
+				// 12345678901  23456789012  34567890123  45678901234 
+				// 836200000153-025300860001-534694502061-122013400009 - 16/12/2013 R$ 1.502,53 02.016.440/0001-62
+				// 846600000000-690000208171-987933201319-101188000000 - 16/11/2013 R$ 69,00    
+				// 846200000004-687400208157-609546201318-101129000002 - 16/11/2013 R$ 68,74
+				//836200000153025300860001534694502061122013400009
+				//83620000015025300860005346945020612201340000
+				
+				If Substr(cStr,3,1) == "6" 	// 03-03 Identificação Valor Real ou referencia 	6=Valor a ser cobrado efetivamente em reais - Modulo 10
+												//														7=Quantidade de moeda - Modulo 10
+												//														8=Valor a ser cobrado efetiavamente em reais - Modulo 11
+												//														9=Quantidade de Moeda - Modulo 11	 		 
+					If lForceDate
+						lContinua 	:= .F.
+	
+						DEFINE MSDIALOG oPerg FROM 001,001 TO 100,350 OF oMainWnd PIXEL TITLE OemToAnsi("Informe a data de vencimento")
+	
+						@ 020,020 SAY "Vencimento" of oPerg pixel
+						@ 018,085 MSGET dDtVencOri of oPerg pixel
+	
+						ACTIVATE MSDIALOG oPerg ON INIT EnchoiceBar(oPerg,{|| lContinua	:= .T. /*true*/,oPerg:End()},{|| oPerg:End()},,) CENTERED
+	
+						If !lContinua
+							nFator	:=	0
+						Else
+							nFator := dDtVencOri - CTOD("07/10/1997")
+						Endif
+					Endif
+					nValor	:=	Val(Substr(cStr,05,11))/100		// 05-15 Tamanho 11
+					nTipCB	:= 1
+				Endif
+			Endif
+			
+			aRetDados	:= { lRet ,DTOS(CTOD("07/10/1997")+nFator) ,nValor,cStr,nTipCB}
+			
+		Endif
+	Endif
+
+	If !Empty(cInStr) .And. !lRet
+		HELP(" ",1,"ONLYNUM")
+	Endif
+
+Return aRetDados

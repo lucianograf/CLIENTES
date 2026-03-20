@@ -1,0 +1,24 @@
+#Include "tlpp-core.th"
+
+/*/{Protheus.doc} FT210COR
+O ponto de entrada FT210LEG possibilita alteração de regras e cores da legenda.
+@author  Anderson Koziel - Vamilly
+@type Function
+@since   03/10/24
+@version 1.0
+@return  array, cores da legenda e as suas respectivas regras.
+@obs https://tdn.totvs.com/pages/releaseview.action?pageId=6784496
+/*/
+User Function FT210COR()
+    Local aCores := ParamIXB as array
+    Local lAprHie := SuperGetMv("DC_APRHIE" ,.F.) As Logical  // Habilita aprovação por Hierarquia.
+    
+    If lAprHie
+        DBSelectArea("SCR")
+        SCR->(DBSetOrder(1))
+
+        aCores := {{ "C5_BLQ == '1' .And. !SCR->(DBSeek(SC5->C5_FILIAL + '_A' + SC5->C5_NUM)) ",'BR_AZUL'},;
+            { "C5_BLQ == '1' .And. SCR->(DBSeek(SC5->C5_FILIAL + '_A' + SC5->C5_NUM))" ,'BMPPOST'},;
+            { "C5_BLQ == '2'",'BR_LARANJA'} }
+    EndIf
+Return aCores
