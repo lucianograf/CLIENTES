@@ -5,7 +5,7 @@ Ponto de entrada para Adicionar campos durante o lançamento de Notas
 @version  
 @author Marcelo Alberto Lauschner
 @since 10/03/2022
-@return variant, return_description
+@return variant, return_description - mais um teste 20/03/2026
 /*/
 Function U_XMLCTE08()
 
@@ -20,7 +20,7 @@ Function U_XMLCTE08()
 	Local   nD1ICMNDES  := aScan(aLinha,{ |x| Alltrim(x[1]) =="D1_ICMNDES"} )   // D1_ICMNDES - Valor do ICMS ST antecipado
 	Local   nD1ALQNDES  := aScan(aLinha,{ |x| Alltrim(x[1]) =="D1_ALQNDES"} )   // D1_ALQNDES - Aliquota do ICMS antecipado
 	Local   nD1ALIQSOL  := aScan(aLinha,{ |x| Alltrim(x[1]) =="D1_ALIQSOL"} )   // D1_ALIQSOL - Aliquota do Solidário
-	Local 	nD1ALIQCMP	:= aScan(aLinha,{ |x| Alltrim(x[1]) =="D1_ALIQCMP"} )   // D1_ALIQCMP - Aliquota do Solidário Complemento 
+	Local 	nD1ALIQCMP	:= aScan(aLinha,{ |x| Alltrim(x[1]) =="D1_ALIQCMP"} )   // D1_ALIQCMP - Aliquota do Solidário Complemento
 	Local   nD1BRICMS   := aScan(aLinha,{ |x| Alltrim(x[1]) =="D1_BRICMS"} )    // D1_BRICMS  - Base do Icms ST
 	Local   nD1ICMSRET  := aScan(aLinha,{ |x| Alltrim(x[1]) =="D1_ICMSRET"} )   // D1_ICMSRET - Valor do ICMS ST
 	Local   nD1MARGEM   := aScan(aLinha,{ |x| Alltrim(x[1]) =="D1_MARGEM"} )  	// D1_MARGEM  - Margem do Solidário
@@ -55,7 +55,7 @@ Function U_XMLCTE08()
 				Else
 					Aadd(aLinha,{"D1_ALIQSOL"	,(cAliasSFT)->FT_ALIQSOL - (cAliasSFT)->FT_ALFCPST		,Nil,Nil})
 				Endif
-				
+
 				// Base do FECP
 				If nD1BFCPANT > 0
 					aLinha[nD1BFCPANT][2]	    :=  (cAliasSFT)->FT_BSFCPST
@@ -116,9 +116,9 @@ Function U_XMLCTE08()
 					Aadd(aLinha,{"D1_BRICMS"	,(cAliasSFT)->FT_BASERET		,Nil,Nil})
 				Endif
 
-				// Aliquota do ST Complemento destino 
+				// Aliquota do ST Complemento destino
 				If nD1ALIQCMP > 0
-					aLinha[nD1ALIQCMP][2]	    :=  (cAliasSFT)->FT_ALIQSOL 
+					aLinha[nD1ALIQCMP][2]	    :=  (cAliasSFT)->FT_ALIQSOL
 				Else
 					Aadd(aLinha,{"D1_ALIQCMP"	,(cAliasSFT)->FT_ALIQSOL 		,Nil,Nil})
 				Endif
@@ -129,8 +129,8 @@ Function U_XMLCTE08()
 				Else
 					Aadd(aLinha,{"D1_ICMSRET"	,(cAliasSFT)->FT_ICMSRET 	,Nil,Nil})
 				Endif
-				
-				
+
+
 
 			Endif
 			(cAliasSFT)->(DbcloseArea())
