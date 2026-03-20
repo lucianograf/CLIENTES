@@ -10,11 +10,12 @@
 //|Descricao.: PE para n�o permitir a baixa de titulos de previs�o do template
 //|Observa��o:
 //+-----------------------------------------------------------------------------------//
+// teste 20/03/2026//
 *-----------------------------------------*
 User Function SIGAFIN()
-*-----------------------------------------*
+	*-----------------------------------------*
 
-MVPROVIS := Iif( !"|PRP|PRC" $ MVPROVIS,MVPROVIS+"|PRP|PRC",MVPROVIS)
+	MVPROVIS := Iif( !"|PRP|PRC" $ MVPROVIS,MVPROVIS+"|PRP|PRC",MVPROVIS)
 
 Return
 
